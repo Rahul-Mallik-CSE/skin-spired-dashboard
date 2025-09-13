@@ -1,9 +1,10 @@
+/** @format */
+
 "use client";
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 export default function PersonalInformationEditPage() {
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
     image: "",
   });
@@ -37,6 +39,7 @@ export default function PersonalInformationEditPage() {
     if (userProfile?.data) {
       setFormData({
         name: userProfile.data.name || "",
+        email: userProfile.data.email || "",
         phone: userProfile.data.phone || "",
         image: userProfile.data.image || "",
       });
@@ -69,13 +72,14 @@ export default function PersonalInformationEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.phone) {
-      toast.error("Name and phone are required!");
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error("Name, email, and phone are required!");
       return;
     }
 
     const formDataHere = new FormData();
     formDataHere.append("name", formData.name);
+    formDataHere.append("email", formData.email);
     formDataHere.append("phone", formData.phone);
 
     if (avater instanceof File) {
@@ -137,23 +141,24 @@ export default function PersonalInformationEditPage() {
                     className="relative mb-4 cursor-pointer"
                     onClick={handleImageClick}
                   >
-                    <div className="w-32 h-32 rounded-full overflow-hidden relative">
+                    <div className="w-32 h-32 rounded-full overflow-hidden relative bg-gray-200 flex items-center justify-center">
                       {profileImage ? (
-                        <Image
+                        <img
                           src={profileImage}
                           alt="Profile"
-                          fill
-                          className="object-cover"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : userProfile?.data?.image ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${userProfile.data.image}`}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
-                        <Image
-                          src={
-                            process.env.NEXT_PUBLIC_IMAGE_URL +
-                            userProfile?.data?.image
-                          }
-                          alt="Profile"
-                          fill
-                          className="object-cover"
+                        <img
+                          src="/skin.png"
+                          alt="Default Profile"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </div>
@@ -233,6 +238,7 @@ export default function PersonalInformationEditPage() {
                         />
                       </svg>
                     </Label>
+
                     <Input
                       id="phone"
                       name="phone"

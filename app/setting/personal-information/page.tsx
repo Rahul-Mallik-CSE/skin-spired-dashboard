@@ -3,7 +3,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft, Edit } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -12,10 +11,10 @@ import Loading from "@/components/Loading";
 
 export default function PersonalInformationPage() {
   const [user, setUser] = useState({
-    name: "",
+    name: "Admin",
     email: "",
     phone: "",
-    profileImage: "",
+    profileImage: "/skin.png", // Default fallback
   });
 
   const { data: userProfile, isLoading, refetch } = useGetUserProfileQuery("");
@@ -23,11 +22,12 @@ export default function PersonalInformationPage() {
   useEffect(() => {
     if (userProfile) {
       setUser({
-        name: userProfile?.data?.firstName,
-        email: userProfile?.data?.email,
-        phone: userProfile?.data?.phone,
-        profileImage:
-          process.env.NEXT_PUBLIC_IMAGE_URL + userProfile?.data?.image,
+        name: userProfile?.data?.firstName || "Admin",
+        email: userProfile?.data?.email || "",
+        phone: userProfile?.data?.phone || "",
+        profileImage: userProfile?.data?.image
+          ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${userProfile.data.image}`
+          : "/skin.png", // Set fallback to skin.png
       });
     }
   }, [userProfile]);
@@ -60,16 +60,19 @@ export default function PersonalInformationPage() {
               <div className="flex flex-col md:flex-row gap-8 mb-6">
                 {/* Profile Photo Section */}
                 <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 w-full md:w-64 flex flex-col items-center p-6 rounded-2xl">
-                  <div className="w-32 h-32 rounded-full overflow-hidden relative mb-3">
-                    <Image
-                      src={user?.profileImage}
-                      alt="Profile"
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="w-32 h-32 rounded-full overflow-hidden relative mb-3 bg-gray-200 flex items-center justify-center">
+                    {user?.profileImage && (
+                      <img
+                        src={user.profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                   <span className="text-base text-white">Profile</span>
-                  <span className="font-medium text-lg text-white">Admin</span>
+                  <span className="font-medium text-lg text-white">
+                    {user?.name || "Admin"}
+                  </span>
                 </div>
 
                 {/* User Information Section */}
