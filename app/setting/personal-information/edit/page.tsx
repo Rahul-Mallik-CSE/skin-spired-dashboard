@@ -38,7 +38,7 @@ export default function PersonalInformationEditPage() {
   useEffect(() => {
     if (userProfile?.data) {
       setFormData({
-        name: userProfile.data.name || "",
+        name: userProfile.data.firstName || "",
         email: userProfile.data.email || "",
         phone: userProfile.data.phone || "",
         image: userProfile.data.image || "",
@@ -78,7 +78,7 @@ export default function PersonalInformationEditPage() {
     }
 
     const formDataHere = new FormData();
-    formDataHere.append("name", formData.name);
+    formDataHere.append("firstName", formData.name);
     formDataHere.append("email", formData.email);
     formDataHere.append("phone", formData.phone);
 
@@ -209,7 +209,8 @@ export default function PersonalInformationEditPage() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full h-12 text-lg text-white bg-transparent pl-12"
+                      placeholder="Enter your name"
+                      className="w-full h-12 text-lg text-white bg-transparent pl-12 placeholder:text-gray-300"
                     />
                   </div>
 
@@ -238,14 +239,43 @@ export default function PersonalInformationEditPage() {
                         />
                       </svg>
                     </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      className="w-full h-12 text-lg text-white bg-transparent pl-12 placeholder:text-gray-300"
+                    />
+                  </div>
 
+                  <div className="relative h-12 bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 rounded-3xl">
+                    <Label className="absolute top-1/2 -translate-y-1/2 left-4 text-lg font-medium text-primary">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M15.8327 13.1663C15.8327 13.1663 14.9993 14.9997 12.4993 14.9997C9.99935 14.9997 9.16602 13.1663 9.16602 13.1663M12.4993 5.83301V7.49967M7.49935 8.33301C7.95768 8.33301 8.33268 7.95801 8.33268 7.49967C8.33268 7.04134 7.95768 6.66634 7.49935 6.66634C7.04102 6.66634 6.66602 7.04134 6.66602 7.49967C6.66602 7.95801 7.04102 8.33301 7.49935 8.33301ZM17.4993 8.33301C17.9577 8.33301 18.3327 7.95801 18.3327 7.49967C18.3327 7.04134 17.9577 6.66634 17.4993 6.66634C17.041 6.66634 16.666 7.04134 16.666 7.49967C16.666 7.95801 17.041 8.33301 17.4993 8.33301ZM12.4993 3.33301C16.6414 3.33301 19.9993 6.69092 19.9993 10.833C19.9993 14.9751 16.6414 18.333 12.4993 18.333C8.35726 18.333 4.99935 14.9751 4.99935 10.833C4.99935 6.69092 8.35726 3.33301 12.4993 3.33301Z"
+                          stroke="#B0B0B0"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Label>
                     <Input
                       id="phone"
                       name="phone"
-                      type="number"
+                      type="tel"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full h-12 text-lg text-white bg-transparent pl-12"
+                      placeholder="Enter your phone number"
+                      className="w-full h-12 text-lg text-white bg-transparent pl-12 placeholder:text-gray-300"
                     />
                   </div>
 
