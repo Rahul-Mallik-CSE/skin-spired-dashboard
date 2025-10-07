@@ -58,6 +58,7 @@ function SkinConditionTable() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
   // Edit form states
   const [editForm, setEditForm] = useState<EditForm>({
@@ -69,11 +70,21 @@ function SkinConditionTable() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isLoading } = useGetAllSkinConditionQuery({
-    page: currentPage,
-    limit: itemsPerPage,
-    search: searchTerm,
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data, isLoading, error } = useGetAllSkinConditionQuery({
+    page: 1, // Always get page 1 for client-side filtering
+    limit: 1000, // Get all data for client-side filtering
+    search: "", // Remove server-side search, use client-side only
   });
+
+  console.log("API Query - Loading:", isLoading, "Error:", error);
 
   // Fetch individual condition details when modal opens
   const { data: conditionDetails, isLoading: isDetailsLoading } =
@@ -87,9 +98,43 @@ function SkinConditionTable() {
   const [createSkinCondition, { isLoading: isCreating }] =
     useCreateSkinConditionMutation();
 
-  const conditions: SkinCondition[] = data?.data?.result || [];
-  const totalItems = data?.data?.meta?.total || 0;
+  const allConditions: SkinCondition[] = data?.data?.result || [];
+
+  // Debug: Log the raw data
+  console.log("Raw API data:", data);
+  console.log("All conditions:", allConditions);
+  console.log("Search term:", searchTerm, "Debounced:", debouncedSearchTerm);
+
+  // Filter conditions based on search term (client-side filtering for better UX)
+  const filteredConditions = allConditions.filter((condition) => {
+    // If no search term, show all
+    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") {
+      return true;
+    }
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    const skinType = (condition.skinType || "").toLowerCase();
+    const symptoms = (condition.symptmos || "").toLowerCase();
+
+    // Simple includes search for better reliability
+    const skinTypeMatch = skinType.includes(searchLower);
+    const symptomsMatch = symptoms.includes(searchLower);
+
+    return skinTypeMatch || symptomsMatch;
+  });
+
+  // Debug filtered results
+  console.log("Filtered conditions:", filteredConditions);
+  console.log("Filtered count:", filteredConditions.length);
+
+  // Pagination for filtered results
+  const totalItems = filteredConditions.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const conditions = filteredConditions.slice(startIndex, endIndex);
+
+  console.log("Final conditions to display:", conditions);
 
   useEffect(() => {
     if (conditionDetails?.data && selectedConditionId) {
@@ -115,9 +160,10 @@ function SkinConditionTable() {
     }
   }, [conditionDetails, selectedConditionId, isModalOpen]);
 
+  // Reset to first page when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   const openConditionModal = (conditionId: string) => {
     setSelectedConditionId(conditionId);
@@ -268,7 +314,7 @@ function SkinConditionTable() {
         <div className="flex justify-between items-center px-3 pb-6">
           <input
             type="text"
-            placeholder="Search by skin type"
+            placeholder="Search by skin type or symptoms"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -297,37 +343,57 @@ function SkinConditionTable() {
             </TableHeader>
 
             <TableBody>
-              {conditions?.map((condition) => (
-                <TableRow key={condition._id}>
-                  <TableCell className="text-start text-black text-lg">
-                    <div className="flex items-center  gap-2">
-                      {condition?.image && (
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${condition.image}`}
-                          className="w-8 h-8 rounded-full object-cover"
-                          alt="Skin condition"
-                        />
+              {conditions.length > 0 ? (
+                conditions.map((condition) => (
+                  <TableRow key={condition._id}>
+                    <TableCell className="text-start text-black text-lg">
+                      <div className="flex items-center gap-2">
+                        {condition?.image && (
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${condition.image}`}
+                            className="w-8 h-8 rounded-full object-cover"
+                            alt="Skin condition"
+                          />
+                        )}
+                        <span>{condition.skinType || "Unknown Type"}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center text-black text-lg">
+                      {new Date(condition.createdAt).toLocaleDateString()}
+                    </TableCell>
+
+                    <TableCell className="text-center text-black text-lg">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => openConditionModal(condition._id)}
+                      >
+                        <Info className="h-6 w-6" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-8">
+                    <div className="text-gray-500">
+                      {debouncedSearchTerm ? (
+                        <>
+                          No skin conditions found matching "
+                          {debouncedSearchTerm}"
+                          <div className="text-sm mt-1">
+                            Try searching by skin type or symptoms
+                          </div>
+                        </>
+                      ) : (
+                        "No skin conditions available"
                       )}
-                      <span>{condition.skinType || "Unknown Type"}</span>
                     </div>
                   </TableCell>
-
-                  <TableCell className="text-center text-black text-lg">
-                    {new Date(condition.createdAt).toLocaleDateString()}
-                  </TableCell>
-
-                  <TableCell className="text-center text-black text-lg">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => openConditionModal(condition._id)}
-                    >
-                      <Info className="h-6 w-6" />
-                    </Button>
-                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
@@ -409,7 +475,12 @@ function SkinConditionTable() {
         <div className="text-center text-sm text-gray-600 mt-2">
           Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}{" "}
           to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
-          entries
+          {debouncedSearchTerm ? "filtered " : ""}entries
+          {debouncedSearchTerm && (
+            <span className="text-blue-600 ml-1">
+              (from {allConditions.length} total)
+            </span>
+          )}
         </div>
       </div>
 

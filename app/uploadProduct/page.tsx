@@ -78,6 +78,7 @@ function ProductTable() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
   // Edit form states
   const [editForm, setEditForm] = useState<EditForm>({
@@ -98,12 +99,22 @@ function ProductTable() {
   const [isAddingCategory, setIsAddingCategory] = useState<boolean>(false);
   const [newCategoryName, setNewCategoryName] = useState<string>("");
 
-  // API hooks
-  const { data, isLoading } = useGetAllProductsQuery({
-    page: currentPage,
-    limit: itemsPerPage,
-    search: searchTerm,
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // API hooks - fetch all products for client-side filtering
+  const { data, isLoading, error } = useGetAllProductsQuery({
+    page: 1, // Always get page 1 for client-side filtering
+    limit: 1000, // Get all data for client-side filtering
+    search: "", // Remove server-side search, use client-side only
   });
+
+  console.log("API Query - Loading:", isLoading, "Error:", error);
 
   // Always fetch all skin conditions to ensure they are available
   const { data: skinConditionsData, refetch: refetchSkinConditions } =
@@ -123,11 +134,14 @@ function ProductTable() {
   const [createSkinCondition, { isLoading: isCreatingCategory }] =
     useCreateSkinConditionMutation();
 
-  const products: Product[] = data?.data?.result || [];
+  const allProducts: Product[] = data?.data?.result || [];
   const skinConditions: SkinCondition[] =
     skinConditionsData?.data?.result || [];
-  const totalItems = data?.data?.meta?.total || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Debug: Log the raw data
+  console.log("Raw API data:", data);
+  console.log("All products:", allProducts);
+  console.log("Search term:", searchTerm, "Debounced:", debouncedSearchTerm);
 
   // Enhanced function to get skin condition name by ID
   const getSkinConditionName = (id: string) => {
@@ -142,6 +156,43 @@ function ProductTable() {
 
     return condition?.skinType || "Unknown";
   };
+
+  // Filter products based on search term (client-side filtering for better UX)
+  const filteredProducts = allProducts.filter((product) => {
+    // If no search term, show all
+    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") {
+      return true;
+    }
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    const productName = (product.productName || "").toLowerCase();
+    const ingredients = (product.ingredients || "").toLowerCase();
+
+    // Also search by skin condition name
+    const skinConditionName = getSkinConditionName(
+      product.skinCondition
+    ).toLowerCase();
+
+    // Simple includes search for better reliability
+    const productNameMatch = productName.includes(searchLower);
+    const ingredientsMatch = ingredients.includes(searchLower);
+    const skinConditionMatch = skinConditionName.includes(searchLower);
+
+    return productNameMatch || ingredientsMatch || skinConditionMatch;
+  });
+
+  // Debug filtered results
+  console.log("Filtered products:", filteredProducts);
+  console.log("Filtered count:", filteredProducts.length);
+
+  // Pagination for filtered results
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const products = filteredProducts.slice(startIndex, endIndex);
+
+  console.log("Final products to display:", products);
 
   // Force refetch skin conditions when modal opens
   useEffect(() => {
@@ -186,9 +237,10 @@ function ProductTable() {
     }
   }, [productDetails, selectedProductId, isModalOpen]);
 
+  // Reset to first page when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   const openProductModal = (productId: string) => {
     setSelectedProductId(productId);
@@ -389,7 +441,7 @@ function ProductTable() {
         <div className="flex justify-between items-center px-3 pb-6">
           <input
             type="text"
-            placeholder="Search by product name"
+            placeholder="Search by product name, ingredients, or skin condition"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -423,135 +475,162 @@ function ProductTable() {
             </TableHeader>
 
             <TableBody>
-              {products?.map((product) => (
-                <TableRow key={product._id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      {product.image && product.image[0] && (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
-                          <img
-                            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${product.image[0]}`}
-                            className="w-full h-full object-cover"
-                            alt="Product"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {product.productName || "Unknown Product"}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {getSkinConditionName(product.skinCondition)}
+              {products.length > 0 ? (
+                products.map((product) => (
+                  <TableRow key={product._id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {product.image && product.image[0] && (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${product.image[0]}`}
+                              className="w-full h-full object-cover"
+                              alt="Product"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {product.productName || "Unknown Product"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getSkinConditionName(product.skinCondition)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell className="text-center text-gray-700 ">
-                    {getSkinConditionName(product.skinCondition)}
-                  </TableCell>
+                    <TableCell className="text-center text-gray-700 ">
+                      {getSkinConditionName(product.skinCondition)}
+                    </TableCell>
 
-                  <TableCell className="text-center text-gray-700">
-                    {new Date(product.createdAt).toLocaleDateString("en-GB")}
-                  </TableCell>
+                    <TableCell className="text-center text-gray-700">
+                      {new Date(product.createdAt).toLocaleDateString("en-GB")}
+                    </TableCell>
 
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-blue-50"
-                        onClick={() => openProductModal(product._id)}
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4 text-blue-600" />
-                      </Button>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-blue-50"
+                          onClick={() => openProductModal(product._id)}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <div className="text-gray-500">
+                      {debouncedSearchTerm ? (
+                        <>
+                          No products found matching "{debouncedSearchTerm}"
+                          <div className="text-sm mt-1">
+                            Try searching by product name, ingredients, or skin
+                            condition
+                          </div>
+                        </>
+                      ) : (
+                        "No products available"
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
 
         {/* Pagination */}
-        <div className="max-w-sm mx-auto flex items-center justify-between border-t border-gray-200 rounded-lg bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 text-black px-4 py-3 mt-6">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <span className="sr-only">Previous</span>
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+        {totalPages > 0 && (
+          <div className="max-w-sm mx-auto flex items-center justify-between border-t border-gray-200 rounded-lg bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 text-black px-4 py-3 mt-6">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Button>
-            <span className="text-sm text-[#E6E6E6]">Previous</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (page) => (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? "default" : "outline"}
-                  size="sm"
-                  className={`h-8 w-8 p-0 ${
-                    page === currentPage ? "bg-teal-800 text-white" : ""
-                  }`}
-                  onClick={() => handlePageChange(page)}
+                <span className="sr-only">Previous</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  {page}
-                </Button>
-              )
-            )}
-          </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </Button>
+              <span className="text-sm text-[#E6E6E6]">Previous</span>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[#E6E6E6]">Next</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <span className="sr-only">Next</span>
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    className={`h-8 w-8 p-0 ${
+                      page === currentPage ? "bg-teal-800 text-white" : ""
+                    }`}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </Button>
+                )
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[#E6E6E6]">Next</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </Button>
+                <span className="sr-only">Next</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Page Info */}
         <div className="text-center text-sm text-gray-600 mt-2">
           Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}{" "}
           to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
-          entries
+          {debouncedSearchTerm ? "filtered " : ""}entries
+          {debouncedSearchTerm && (
+            <span className="text-blue-600 ml-1">
+              (from {allProducts.length} total)
+            </span>
+          )}
         </div>
       </div>
 
