@@ -55,6 +55,7 @@ interface EditForm {
   howToUse: string[];
   skinCondition: string;
   images: (File | null)[];
+  existingImages: (string | null)[];
 }
 
 const UploadProductPage = () => {
@@ -87,6 +88,7 @@ function ProductTable() {
     howToUse: [],
     skinCondition: "",
     images: [null, null, null],
+    existingImages: [null, null, null],
   });
   const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([
     null,
@@ -213,6 +215,11 @@ function ProductTable() {
             ? product.skinCondition._id
             : product.skinCondition || "",
         images: [null, null, null],
+        existingImages: [
+          product.image[0] || null,
+          product.image[1] || null,
+          product.image[2] || null,
+        ],
       });
 
       // Set image previews from existing images
@@ -232,6 +239,7 @@ function ProductTable() {
         howToUse: ["", "", ""],
         skinCondition: "",
         images: [null, null, null],
+        existingImages: [null, null, null],
       });
       setImagePreviews([null, null, null]);
     }
@@ -264,6 +272,7 @@ function ProductTable() {
       howToUse: [],
       skinCondition: "",
       images: [null, null, null],
+      existingImages: [null, null, null],
     });
     setImagePreviews([null, null, null]);
     setIsAddingCategory(false);
@@ -360,12 +369,50 @@ function ProductTable() {
         formData.append(`howToUse[${index}]`, item);
       });
 
-      // Add only new images (File objects)
-      editForm.images.forEach((image, index) => {
-        if (image instanceof File) {
-          formData.append(`image`, image);
+      // Handle image replacement - send position-based updates
+      if (selectedProductId) {
+        // For updates: Send new images and mark old ones for deletion
+        const imagesToDelete: string[] = [];
+
+        for (let index = 0; index < 3; index++) {
+          const oldImage = editForm.existingImages[index];
+          const newImage = editForm.images[index];
+
+          if (newImage instanceof File) {
+            // New image uploaded at this position - send new image
+            formData.append(`image`, newImage);
+
+            // If there was an old image at this position, mark it for deletion
+            if (oldImage) {
+              imagesToDelete.push(oldImage);
+            }
+          }
         }
-      });
+
+        // Send old images to delete (matching Postman format)
+        imagesToDelete.forEach((imagePath) => {
+          formData.append(`imagesToDelete[]`, imagePath);
+        });
+
+        console.log("🔄 Image replacement with deletion:", {
+          productId: selectedProductId,
+          newImages: editForm.images
+            .map((img, index) =>
+              img instanceof File ? `Position ${index}: ${img.name}` : null
+            )
+            .filter(Boolean),
+          imagesToDelete: imagesToDelete,
+        });
+      } else {
+        // For creation: Send all new images normally
+        const newImages = editForm.images.filter(
+          (image) => image instanceof File
+        );
+        console.log("📷 Creating product with", newImages.length, "images");
+        newImages.forEach((image) => {
+          formData.append(`image`, image);
+        });
+      }
 
       // Debug: Log FormData contents
       console.log("FormData contents:");
@@ -413,6 +460,11 @@ function ProductTable() {
               ? product.skinCondition._id
               : product.skinCondition || "",
           images: [null, null, null],
+          existingImages: [
+            product.image[0] || null,
+            product.image[1] || null,
+            product.image[2] || null,
+          ],
         });
 
         const previews: (string | null)[] = [null, null, null];
