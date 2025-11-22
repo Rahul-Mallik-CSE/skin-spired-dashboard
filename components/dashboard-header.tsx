@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 
 import { Bell } from "lucide-react";
@@ -62,11 +64,15 @@ export default function DashboardHeader() {
             <Avatar>
               <AvatarImage
                 src={
-                  process.env.NEXT_PUBLIC_IMAGE_URL + userProfile?.data?.image
+                  userProfile?.data?.image
+                    ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${userProfile.data.image}`
+                    : "/skin.png"
                 }
-                alt={userProfile?.name}
+                alt={userProfile?.data?.name || "User"}
               />
-              <AvatarFallback>{userProfile?.name}</AvatarFallback>
+              <AvatarFallback>
+                {userProfile?.data?.name?.charAt(0)?.toUpperCase() || "A"}
+              </AvatarFallback>
             </Avatar>
           </Link>
           <span className="hidden md:inline">{userProfile?.data?.name} </span>

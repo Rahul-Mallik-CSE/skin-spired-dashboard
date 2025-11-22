@@ -1,4 +1,8 @@
-/** @type {import('next').NextConfig} */
+/**
+ * @format
+ * @type {import('next').NextConfig}
+ */
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -19,6 +23,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.akamai.steamstatic.com",
         port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "69.62.70.69",
+        port: "5005",
         pathname: "/**",
       },
     ],

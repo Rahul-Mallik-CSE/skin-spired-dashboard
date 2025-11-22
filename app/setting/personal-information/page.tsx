@@ -3,6 +3,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Edit } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -61,13 +62,17 @@ export default function PersonalInformationPage() {
                 {/* Profile Photo Section */}
                 <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 w-full md:w-64 flex flex-col items-center p-6 rounded-2xl">
                   <div className="w-32 h-32 rounded-full overflow-hidden relative mb-3 bg-gray-200 flex items-center justify-center">
-                    {user?.profileImage && (
-                      <img
-                        src={user.profileImage}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                    <Image
+                      src={user?.profileImage || "/skin.png"}
+                      alt="Profile"
+                      width={128}
+                      height={128}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/skin.png";
+                      }}
+                    />
                   </div>
                   <span className="text-base text-white">Profile</span>
                   <span className="font-medium text-lg text-white">
