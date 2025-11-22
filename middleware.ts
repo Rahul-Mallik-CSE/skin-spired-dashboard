@@ -1,3 +1,5 @@
+/** @format */
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "./service/authService";
@@ -31,7 +33,9 @@ export const config = {
     "/",
     "/users",
     "/bookingList",
-    "/settings",
+    "/uploadProduct",
+    "/skinCondition",
+    "/setting",
     "/court",
     "/cart",
     "/checkout",
