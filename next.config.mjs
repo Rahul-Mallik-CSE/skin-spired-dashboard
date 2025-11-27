@@ -33,6 +33,15 @@ const nextConfig = {
       },
     ],
   },
+  // Proxy API requests to bypass Mixed Content errors
+  async rewrites() {
+    return [
+      {
+        source: "/api/backend/:path*",
+        destination: `${process.env.BACKEND_API_URL}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

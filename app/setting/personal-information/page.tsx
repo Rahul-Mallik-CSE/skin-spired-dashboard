@@ -9,6 +9,7 @@ import { ArrowLeft, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGetUserProfileQuery } from "@/redux/feature/userAPI";
 import Loading from "@/components/Loading";
+import { getFullImageUrl } from "@/lib/utils";
 
 export default function PersonalInformationPage() {
   const [user, setUser] = useState({
@@ -26,12 +27,11 @@ export default function PersonalInformationPage() {
         name: userProfile?.data?.firstName || "Admin",
         email: userProfile?.data?.email || "",
         phone: userProfile?.data?.phone || "",
-        profileImage: userProfile?.data?.image
-          ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${userProfile.data.image}`
-          : "/skin.png", // Set fallback to skin.png
+        profileImage: userProfile?.data?.image || "/skin.png",
       });
     }
   }, [userProfile]);
+  console.log("User Profile Data:", userProfile);
 
   if (isLoading)
     return (
@@ -63,15 +63,12 @@ export default function PersonalInformationPage() {
                 <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 w-full md:w-64 flex flex-col items-center p-6 rounded-2xl">
                   <div className="w-32 h-32 rounded-full overflow-hidden relative mb-3 bg-gray-200 flex items-center justify-center">
                     <Image
-                      src={user?.profileImage || "/skin.png"}
+                      src={getFullImageUrl(user.profileImage)}
                       alt="Profile"
                       width={128}
                       height={128}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/skin.png";
-                      }}
+                      priority
                     />
                   </div>
                   <span className="text-base text-white">Profile</span>
