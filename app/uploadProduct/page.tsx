@@ -31,6 +31,7 @@ import {
 import { Info, X, Plus, Trash2, Upload, Eye } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import { getFullImageUrl } from "@/lib/utils";
 
 // Types
 interface Product {
@@ -535,7 +536,7 @@ function ProductTable() {
                         {product.image && product.image[0] && (
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
                             <img
-                              src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${product.image[0]}`}
+                              src={getFullImageUrl(product.image[0])}
                               className="w-full h-full object-cover"
                               alt="Product"
                             />
@@ -936,7 +937,7 @@ function ProductTable() {
                                   className="aspect-square rounded-lg overflow-hidden bg-gray-100"
                                 >
                                   <img
-                                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${img}`}
+                                    src={getFullImageUrl(img)}
                                     alt={`Product ${index + 1}`}
                                     className="w-full h-full object-cover"
                                   />

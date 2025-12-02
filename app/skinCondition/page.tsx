@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getFullImageUrl } from "@/lib/utils";
 import {
   useGetAllSkinConditionQuery,
   useGetSkinConditionByIdQuery,
@@ -18,6 +19,7 @@ import {
   useCreateSkinConditionMutation,
 } from "@/redux/feature/skinConditionAPI";
 import { Info, X, Plus, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 
 // Types
@@ -349,10 +351,12 @@ function SkinConditionTable() {
                     <TableCell className="text-start text-black text-lg">
                       <div className="flex items-center gap-2">
                         {condition?.image && (
-                          <img
-                            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${condition.image}`}
+                          <Image
+                            src={getFullImageUrl(condition.image)}
                             className="w-8 h-8 rounded-full object-cover"
                             alt="Skin condition"
+                            width={32}
+                            height={32}
                           />
                         )}
                         <span>{condition.skinType || "Unknown Type"}</span>
@@ -709,7 +713,7 @@ function SkinConditionTable() {
                     ) : conditionDetails.data.image ? (
                       <div className="w-full max-w-md">
                         <img
-                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${conditionDetails.data.image}`}
+                          src={getFullImageUrl(conditionDetails.data.image)}
                           alt={conditionDetails.data.skinType}
                           className="w-full h-auto rounded-xl object-cover shadow-lg"
                         />

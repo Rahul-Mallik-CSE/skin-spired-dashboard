@@ -39,5 +39,6 @@ export const config = {
     "/court",
     "/cart",
     "/checkout",
+    "/notifications",
   ],
 };

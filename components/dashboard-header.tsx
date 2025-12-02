@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useGetUserProfileQuery } from "@/redux/feature/userAPI";
 import { useGetNotificationCountQuery } from "@/redux/feature/notificationAPI";
+import { getFullImageUrl } from "@/lib/utils";
 
 export default function DashboardHeader() {
   const pathname = usePathname();
@@ -63,11 +64,7 @@ export default function DashboardHeader() {
           <Link href="/setting/personal-information">
             <Avatar>
               <AvatarImage
-                src={
-                  userProfile?.data?.image
-                    ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${userProfile.data.image}`
-                    : "/skin.png"
-                }
+                src={getFullImageUrl(userProfile?.data?.image)}
                 alt={userProfile?.data?.name || "User"}
               />
               <AvatarFallback>

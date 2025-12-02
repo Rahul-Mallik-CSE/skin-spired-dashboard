@@ -18,7 +18,7 @@ export const getFullImageUrl = (
     return imagePath;
   }
   if (imagePath.startsWith("/images") || imagePath.startsWith("/images")) {
-    return `${process.env.NEXT_PUBLIC_API_URL}${imagePath}`;
+    return `${process.env.NEXT_PUBLIC_IMAGE_URL}${imagePath}`;
   }
   return imagePath;
 };

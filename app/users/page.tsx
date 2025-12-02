@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 
 import { Info, X } from "lucide-react";
@@ -14,6 +16,8 @@ import { useState } from "react";
 import DetailRow from "@/components/DetailRow";
 import { useGetAllUsersQuery } from "@/redux/feature/userAPI";
 import Loading from "@/components/Loading";
+import { getFullImageUrl } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 export default function DashboardContent() {
   return (
@@ -93,10 +97,7 @@ function TransactionTable() {
                   <TableCell className="text-center text-black text-lg">
                     <div className="flex items-center justify-center gap-2">
                       <img
-                        src={
-                          user?.image &&
-                          `${process.env.NEXT_PUBLIC_IMAGE_URL}${user.image}`
-                        }
+                        src={getFullImageUrl(user.image)}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     </div>
@@ -217,18 +218,14 @@ function TransactionTable() {
             </button>
 
             {/* User Image */}
-            {selectedUser?.image && (
-              <div className="flex justify-center mb-4">
-                <img
-                  src={
-                    selectedUser?.image &&
-                    `${process.env.NEXT_PUBLIC_IMAGE_URL}${selectedUser?.image}`
-                  }
-                  alt={selectedUser.name}
-                  className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
-                />
-              </div>
-            )}
+
+            <div className="flex justify-center mb-4">
+              <img
+                src={getFullImageUrl(selectedUser?.image)}
+                alt={selectedUser.name}
+                className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
+              />
+            </div>
 
             {/* Heading */}
             <h2 className="mb-6 text-center text-[30px] font-semibold text-[#E6E6E6]">
@@ -237,13 +234,31 @@ function TransactionTable() {
 
             {/* User Details */}
             <div className="space-y-6">
-              <DetailRow label="User Name" value={selectedUser?.firstName} />
+              <DetailRow
+                label="User Name"
+                value={`${selectedUser?.firstName || ""} ${
+                  selectedUser?.lastName || ""
+                }`}
+              />
 
               <DetailRow
                 label="Join Date"
                 value={selectedUser?.createdAt.slice(0, 10)}
               />
               <DetailRow label="Email" value={selectedUser?.email} />
+              <DetailRow
+                label="Age"
+                value={selectedUser?.age?.toString() || "N/A"}
+              />
+              <DetailRow label="Gender" value={selectedUser?.gender || "N/A"} />
+              <div className="flex justify-between border-b border-[#D1D5DB] py-2">
+                <span className="text-[#E6E6E6]">Notification</span>
+                <Switch
+                  checked={selectedUser?.isNotification || false}
+                  disabled
+                  className="data-[state=checked]:bg-[#45b1b4]"
+                />
+              </div>
             </div>
 
             {/* Okay Button */}
