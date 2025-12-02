@@ -1,3 +1,5 @@
+/** @format */
+
 import baseApi from "../api/baseAPI";
 
 const authAPI = baseApi.injectEndpoints({
@@ -46,6 +48,18 @@ const authAPI = baseApi.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+
+    updateUserData: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/user/update-user-data/${id}`,
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
@@ -54,4 +68,5 @@ export const {
   useGetUserProfileQuery,
   useUpdateProfileMutation,
   useGetProfileQuery,
+  useUpdateUserDataMutation,
 } = authAPI;

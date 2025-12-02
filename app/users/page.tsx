@@ -14,10 +14,14 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import DetailRow from "@/components/DetailRow";
-import { useGetAllUsersQuery } from "@/redux/feature/userAPI";
+import {
+  useGetAllUsersQuery,
+  useUpdateUserDataMutation,
+} from "@/redux/feature/userAPI";
 import Loading from "@/components/Loading";
 import { getFullImageUrl } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 export default function DashboardContent() {
   return (
@@ -34,11 +38,25 @@ function TransactionTable() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<any>({
+    firstName: "",
+    lastName: "",
+    age: "",
+    gender: "",
+    isNotification: false,
+    image: null,
+  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useState<any>(null);
 
   const { data, isLoading } = useGetAllUsersQuery({
     page: currentPage,
     limit: itemsPerPage,
   });
+
+  const [updateUserData, { isLoading: isUpdating }] =
+    useUpdateUserDataMutation();
 
   console.log(data);
 
@@ -51,7 +69,91 @@ function TransactionTable() {
 
   const openUserModal = (user: any) => {
     setSelectedUser(user);
+    setEditForm({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      age: user.age?.toString() || "",
+      gender: user.gender || "",
+      isNotification: user.isNotification || false,
+      image: null,
+    });
+    setImagePreview(user.image ? getFullImageUrl(user.image) : null);
+    setIsEditMode(false);
     setIsModalOpen(true);
+  };
+
+  const handleEditClick = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditForm({
+      firstName: selectedUser.firstName || "",
+      lastName: selectedUser.lastName || "",
+      age: selectedUser.age?.toString() || "",
+      gender: selectedUser.gender || "",
+      isNotification: selectedUser.isNotification || false,
+      image: null,
+    });
+    setImagePreview(
+      selectedUser.image ? getFullImageUrl(selectedUser.image) : null
+    );
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("firstName", editForm.firstName);
+      formData.append("lastName", editForm.lastName);
+      formData.append("age", editForm.age);
+      formData.append("gender", editForm.gender);
+      formData.append("isNotification", editForm.isNotification.toString());
+
+      // Add image if a new one was selected
+      if (editForm.image) {
+        formData.append("image", editForm.image);
+      }
+
+      const result = await updateUserData({
+        id: selectedUser._id,
+        data: formData,
+      }).unwrap();
+
+      // Update selected user with new data
+      setSelectedUser(result.data);
+      setImagePreview(
+        result.data.image ? getFullImageUrl(result.data.image) : null
+      );
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("Failed to update user:", error);
+    }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setEditForm((prev: any) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setEditForm((prev: any) => ({
+        ...prev,
+        image: file,
+      }));
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    setIsEditMode(false);
+    setImagePreview(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -218,13 +320,36 @@ function TransactionTable() {
             </button>
 
             {/* User Image */}
-
             <div className="flex justify-center mb-4">
-              <img
-                src={getFullImageUrl(selectedUser?.image)}
-                alt={selectedUser.name}
-                className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
-              />
+              <div className="relative">
+                <img
+                  src={imagePreview || "/placeholder-avatar.png"}
+                  alt={selectedUser.name}
+                  className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
+                />
+                {isEditMode && (
+                  <label
+                    htmlFor="image-upload"
+                    className="absolute bottom-0 right-0 bg-[#45b1b4] hover:bg-[#5ce1e6b7] text-white rounded-full p-2 cursor-pointer"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </label>
+                )}
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
             </div>
 
             {/* Heading */}
@@ -233,41 +358,159 @@ function TransactionTable() {
             </h2>
 
             {/* User Details */}
-            <div className="space-y-6">
-              <DetailRow
-                label="User Name"
-                value={`${selectedUser?.firstName || ""} ${
-                  selectedUser?.lastName || ""
-                }`}
-              />
+            <div className="space-y-2">
+              {isEditMode ? (
+                <>
+                  {/* Editable First Name and Last Name in one row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[#E6E6E6] text-sm">
+                        First Name
+                      </label>
+                      <Input
+                        value={editForm.firstName}
+                        onChange={(e) =>
+                          handleInputChange("firstName", e.target.value)
+                        }
+                        className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                      />
+                    </div>
 
-              <DetailRow
-                label="Join Date"
-                value={selectedUser?.createdAt.slice(0, 10)}
-              />
-              <DetailRow label="Email" value={selectedUser?.email} />
-              <DetailRow
-                label="Age"
-                value={selectedUser?.age?.toString() || "N/A"}
-              />
-              <DetailRow label="Gender" value={selectedUser?.gender || "N/A"} />
-              <div className="flex justify-between border-b border-[#D1D5DB] py-2">
-                <span className="text-[#E6E6E6]">Notification</span>
-                <Switch
-                  checked={selectedUser?.isNotification || false}
-                  disabled
-                  className="data-[state=checked]:bg-[#45b1b4]"
-                />
-              </div>
+                    <div className="space-y-2">
+                      <label className="text-[#E6E6E6] text-sm">
+                        Last Name
+                      </label>
+                      <Input
+                        value={editForm.lastName}
+                        onChange={(e) =>
+                          handleInputChange("lastName", e.target.value)
+                        }
+                        className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Non-editable Join Date */}
+                  <DetailRow
+                    label="Join Date"
+                    value={selectedUser?.createdAt.slice(0, 10)}
+                  />
+
+                  {/* Non-editable Email */}
+                  <DetailRow label="Email" value={selectedUser?.email} />
+
+                  {/* Editable Age */}
+                  <div className="space-y-2">
+                    <label className="text-[#E6E6E6] text-sm">Age</label>
+                    <Input
+                      type="number"
+                      value={editForm.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                    />
+                  </div>
+
+                  {/* Editable Gender */}
+                  <div className="space-y-2">
+                    <label className="text-[#E6E6E6] text-sm">Gender</label>
+                    <select
+                      value={editForm.gender}
+                      onChange={(e) =>
+                        handleInputChange("gender", e.target.value)
+                      }
+                      className="w-full bg-[#1a1a1a] text-[#E6E6E6] border border-[#D1D5DB] rounded-md px-3 py-2"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Editable Notification Switch */}
+                  <div className="flex justify-between border-b border-[#D1D5DB] py-2">
+                    <span className="text-[#E6E6E6]">Notification</span>
+                    <Switch
+                      checked={editForm.isNotification}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("isNotification", checked)
+                      }
+                      className="data-[state=checked]:bg-[#45b1b4]"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <DetailRow
+                    label="User Name"
+                    value={`${selectedUser?.firstName || ""} ${
+                      selectedUser?.lastName || ""
+                    }`}
+                  />
+
+                  <DetailRow
+                    label="Join Date"
+                    value={selectedUser?.createdAt.slice(0, 10)}
+                  />
+                  <DetailRow label="Email" value={selectedUser?.email} />
+                  <DetailRow
+                    label="Age"
+                    value={selectedUser?.age?.toString() || "N/A"}
+                  />
+                  <DetailRow
+                    label="Gender"
+                    value={selectedUser?.gender || "N/A"}
+                  />
+                  <div className="flex justify-between border-b border-[#D1D5DB] py-2">
+                    <span className="text-[#E6E6E6]">Notification</span>
+                    <Switch
+                      checked={selectedUser?.isNotification || false}
+                      disabled
+                      className="data-[state=checked]:bg-[#45b1b4]"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Okay Button */}
-            <Button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-6 w-full bg-[#45b1b4] hover:bg-[#5ce1e6b7]"
-            >
-              Okay
-            </Button>
+            {/* Action Buttons */}
+            <div className="mt-6 flex gap-2">
+              {isEditMode ? (
+                <>
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    className="flex-1 border-[#D1D5DB] text-[#E6E6E6] hover:bg-[#1a1a1a]"
+                    disabled={isUpdating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    className="flex-1 bg-[#45b1b4] hover:bg-[#5ce1e6b7]"
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? "Saving..." : "Save"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={closeModal}
+                    variant="outline"
+                    className="flex-1 border-[#D1D5DB] text-[#E6E6E6] hover:bg-[#1a1a1a]"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={handleEditClick}
+                    className="flex-1 bg-[#45b1b4] hover:bg-[#5ce1e6b7]"
+                  >
+                    Edit
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
