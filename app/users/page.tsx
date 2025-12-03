@@ -480,7 +480,7 @@ function TransactionTable() {
                   <Button
                     onClick={handleCancelEdit}
                     variant="outline"
-                    className="flex-1 border-[#D1D5DB] text-[#E6E6E6] hover:bg-[#1a1a1a]"
+                    className="flex-1 border-[#D1D5DB]  text-black hover:bg-gray-100"
                     disabled={isUpdating}
                   >
                     Cancel
@@ -498,7 +498,7 @@ function TransactionTable() {
                   <Button
                     onClick={closeModal}
                     variant="outline"
-                    className="flex-1 border-[#D1D5DB] text-[#E6E6E6] hover:bg-[#1a1a1a]"
+                    className="flex-1 border-[#D1D5DB] text-black hover:bg-gray-100"
                   >
                     Close
                   </Button>
