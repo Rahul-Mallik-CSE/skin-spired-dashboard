@@ -26,8 +26,23 @@ const questionsAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    createQuestion: builder.mutation({
+      query: (data) => ({
+        url: `/quesntion/create-question`,
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
-export const { useGetAllQuestionsQuery, useUpdateQuestionMutation } =
-  questionsAPI;
+export const {
+  useGetAllQuestionsQuery,
+  useUpdateQuestionMutation,
+  useCreateQuestionMutation,
+} = questionsAPI;

@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import {
   useGetAllQuestionsQuery,
   useUpdateQuestionMutation,
+  useCreateQuestionMutation,
 } from "@/redux/feature/userQuestionsAPI";
 import Loading from "@/components/Loading";
 import { Switch } from "@/components/ui/switch";
@@ -21,6 +22,7 @@ interface Question {
 
 const UserQuestionsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
@@ -28,6 +30,7 @@ const UserQuestionsPage = () => {
     question: "",
     isVisible: false,
   });
+  const [newQuestion, setNewQuestion] = useState("");
 
   const { data, isLoading } = useGetAllQuestionsQuery({
     page: 1,
@@ -36,6 +39,8 @@ const UserQuestionsPage = () => {
 
   const [updateQuestion, { isLoading: isUpdating }] =
     useUpdateQuestionMutation();
+  const [createQuestion, { isLoading: isCreating }] =
+    useCreateQuestionMutation();
 
   const questions: Question[] = data?.data?.result || [];
 
@@ -69,6 +74,31 @@ const UserQuestionsPage = () => {
     setSelectedQuestion(null);
   };
 
+  const handleCreateClick = () => {
+    setNewQuestion("");
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateSave = async () => {
+    if (!newQuestion.trim()) return;
+
+    try {
+      await createQuestion({
+        question: newQuestion,
+      }).unwrap();
+
+      setIsCreateModalOpen(false);
+      setNewQuestion("");
+    } catch (error) {
+      console.error("Failed to create question:", error);
+    }
+  };
+
+  const handleCreateCancel = () => {
+    setIsCreateModalOpen(false);
+    setNewQuestion("");
+  };
+
   if (isLoading) return <Loading />;
 
   return (
@@ -78,7 +108,10 @@ const UserQuestionsPage = () => {
           <h2 className="text-3xl font-medium text-primary py-6 px-3">
             Questions List
           </h2>
-          <Button className="bg-black text-white hover:bg-gray-800">
+          <Button
+            onClick={handleCreateClick}
+            className="bg-black text-white hover:bg-gray-800"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add New Questions
           </Button>
@@ -212,6 +245,60 @@ const UserQuestionsPage = () => {
                 disabled={isUpdating}
               >
                 {isUpdating ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Question Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Add New Question
+              </h2>
+              <button
+                onClick={handleCreateCancel}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Question
+                </label>
+                <Textarea
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  className="min-h-[120px] resize-none"
+                  placeholder="Enter your question here..."
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-200">
+              <Button
+                onClick={handleCreateCancel}
+                variant="outline"
+                className="flex-1"
+                disabled={isCreating}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateSave}
+                className="flex-1 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 text-white hover:opacity-90"
+                disabled={isCreating || !newQuestion.trim()}
+              >
+                {isCreating ? "Creating..." : "Create Question"}
               </Button>
             </div>
           </div>
