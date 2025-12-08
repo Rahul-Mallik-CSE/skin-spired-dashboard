@@ -40,5 +40,6 @@ export const config = {
     "/cart",
     "/checkout",
     "/notifications",
+    "/user-questions",
   ],
 };

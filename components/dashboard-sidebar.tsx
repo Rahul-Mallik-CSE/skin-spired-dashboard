@@ -106,6 +106,16 @@ export default function DashboardSidebar() {
               />
 
               <NavItem
+                href="/user-questions"
+                icon={StrikethroughIcon}
+                label="User Questions"
+                active={
+                  pathname === "/user-questions" ||
+                  pathname.startsWith("/user-questions")
+                }
+              />
+
+              <NavItem
                 href="/setting"
                 icon={Settings}
                 label="Setting"
