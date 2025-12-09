@@ -60,6 +60,17 @@ const authAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    getAnswersByUser: builder.query<any, string>({
+      query: (userId) => ({
+        url: `/ans/get-ans-by-user/${userId}`,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -69,4 +80,5 @@ export const {
   useUpdateProfileMutation,
   useGetProfileQuery,
   useUpdateUserDataMutation,
+  useGetAnswersByUserQuery,
 } = authAPI;

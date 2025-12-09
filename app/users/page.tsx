@@ -17,6 +17,7 @@ import DetailRow from "@/components/DetailRow";
 import {
   useGetAllUsersQuery,
   useUpdateUserDataMutation,
+  useGetAnswersByUserQuery,
 } from "@/redux/feature/userAPI";
 import Loading from "@/components/Loading";
 import { getFullImageUrl } from "@/lib/utils";
@@ -58,9 +59,16 @@ function TransactionTable() {
   const [updateUserData, { isLoading: isUpdating }] =
     useUpdateUserDataMutation();
 
+  // Fetch user answers when modal is open
+  const { data: answersData, isLoading: isLoadingAnswers } =
+    useGetAnswersByUserQuery(selectedUser?._id, {
+      skip: !selectedUser?._id,
+    });
+
   console.log(data);
 
   const transactions = data?.data?.result;
+  const userAnswers = answersData?.data?.result || [];
 
   const totalPages = Math.ceil(transactions?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -472,6 +480,39 @@ function TransactionTable() {
                 </>
               )}
             </div>
+
+            {/* Questions & Answers Section */}
+            {!isEditMode && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-[#E6E6E6] mb-4 border-b border-[#D1D5DB] pb-2">
+                  Questions & Answers
+                </h3>
+                <div className="space-y-4 max-h-60 overflow-y-auto">
+                  {isLoadingAnswers ? (
+                    <div className="text-center py-4 text-[#E6E6E6]">
+                      Loading answers...
+                    </div>
+                  ) : (
+                    userAnswers.map((item: any) => (
+                      <div
+                        key={item._id}
+                        className="bg-[#1a1a1a] p-3 rounded-lg border border-[#D1D5DB]"
+                      >
+                        <p className="text-sm font-medium text-[#45b1b4] mb-2">
+                          Q: {item.questionId?.question || "N/A"}
+                        </p>
+                        <p className="text-sm text-[#E6E6E6] pl-4">
+                          A: {item.ans}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2 text-right">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="mt-6 flex gap-2">
