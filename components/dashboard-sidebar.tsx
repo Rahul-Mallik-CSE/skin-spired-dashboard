@@ -41,6 +41,7 @@ export default function DashboardSidebar() {
     localStorage.removeItem("accessToken");
 
     router.push("/signin");
+    setIsLogoutModalOpen(false);
   };
 
   if (
