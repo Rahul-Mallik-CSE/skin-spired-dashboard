@@ -2,6 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Edit2, Plus, X } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -17,6 +18,7 @@ interface Question {
   _id: string;
   question: string;
   isVisible: boolean;
+  option?: string[];
   updatedAt?: string;
 }
 
@@ -29,8 +31,10 @@ const UserQuestionsPage = () => {
   const [editForm, setEditForm] = useState({
     question: "",
     isVisible: false,
+    option: [] as string[],
   });
   const [newQuestion, setNewQuestion] = useState("");
+  const [newOptions, setNewOptions] = useState<string[]>(["", ""]);
 
   const { data, isLoading } = useGetAllQuestionsQuery({
     page: 1,
@@ -49,6 +53,10 @@ const UserQuestionsPage = () => {
     setEditForm({
       question: question.question,
       isVisible: question.isVisible,
+      option:
+        question.option && question.option.length > 0
+          ? question.option
+          : ["", ""],
     });
     setIsModalOpen(true);
   };
@@ -57,9 +65,18 @@ const UserQuestionsPage = () => {
     if (!selectedQuestion) return;
 
     try {
+      // Filter out empty options
+      const filteredOptions = editForm.option.filter(
+        (opt) => opt.trim() !== ""
+      );
+
       await updateQuestion({
         id: selectedQuestion._id,
-        data: editForm,
+        data: {
+          question: editForm.question,
+          isVisible: editForm.isVisible,
+          option: filteredOptions,
+        },
       }).unwrap();
 
       setIsModalOpen(false);
@@ -76,6 +93,7 @@ const UserQuestionsPage = () => {
 
   const handleCreateClick = () => {
     setNewQuestion("");
+    setNewOptions(["", ""]);
     setIsCreateModalOpen(true);
   };
 
@@ -83,12 +101,17 @@ const UserQuestionsPage = () => {
     if (!newQuestion.trim()) return;
 
     try {
+      // Filter out empty options
+      const filteredOptions = newOptions.filter((opt) => opt.trim() !== "");
+
       await createQuestion({
         question: newQuestion,
+        option: filteredOptions,
       }).unwrap();
 
       setIsCreateModalOpen(false);
       setNewQuestion("");
+      setNewOptions(["", ""]);
     } catch (error) {
       console.error("Failed to create question:", error);
     }
@@ -97,6 +120,40 @@ const UserQuestionsPage = () => {
   const handleCreateCancel = () => {
     setIsCreateModalOpen(false);
     setNewQuestion("");
+    setNewOptions(["", ""]);
+  };
+
+  // Options management for edit modal
+  const handleEditOptionChange = (index: number, value: string) => {
+    const updatedOptions = [...editForm.option];
+    updatedOptions[index] = value;
+    setEditForm((prev) => ({ ...prev, option: updatedOptions }));
+  };
+
+  const addEditOption = () => {
+    setEditForm((prev) => ({ ...prev, option: [...prev.option, ""] }));
+  };
+
+  const removeEditOption = (index: number) => {
+    if (editForm.option.length <= 2) return; // Keep at least 2 options
+    const updatedOptions = editForm.option.filter((_, i) => i !== index);
+    setEditForm((prev) => ({ ...prev, option: updatedOptions }));
+  };
+
+  // Options management for create modal
+  const handleNewOptionChange = (index: number, value: string) => {
+    const updatedOptions = [...newOptions];
+    updatedOptions[index] = value;
+    setNewOptions(updatedOptions);
+  };
+
+  const addNewOption = () => {
+    setNewOptions([...newOptions, ""]);
+  };
+
+  const removeNewOption = (index: number) => {
+    if (newOptions.length <= 2) return; // Keep at least 2 options
+    setNewOptions(newOptions.filter((_, i) => i !== index));
   };
 
   if (isLoading) return <Loading />;
@@ -127,10 +184,25 @@ const UserQuestionsPage = () => {
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex-1">
-                    <p className="text-gray-800 text-base">
+                    <p className="text-gray-800 text-base font-medium">
                       {question.question}
                     </p>
-                    <div className="flex items-center gap-2 mt-2">
+
+                    {/* Display Options */}
+                    {question.option && question.option.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {question.option.map((opt, idx) => (
+                          <span
+                            key={idx}
+                            className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full"
+                          >
+                            {opt}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 mt-3">
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           question.isVisible
@@ -204,6 +276,50 @@ const UserQuestionsPage = () => {
                 />
               </div>
 
+              {/* Answer Options */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Answer Options
+                  </label>
+                  <Button
+                    type="button"
+                    onClick={addEditOption}
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Option
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {editForm.option.map((option, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={option}
+                        onChange={(e) =>
+                          handleEditOptionChange(index, e.target.value)
+                        }
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1 text-gray-800"
+                      />
+                      {editForm.option.length > 2 && (
+                        <Button
+                          type="button"
+                          onClick={() => removeEditOption(index)}
+                          size="sm"
+                          variant="outline"
+                          className="h-10 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Visibility Switch */}
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <div>
@@ -269,7 +385,7 @@ const UserQuestionsPage = () => {
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-6 space-y-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Question
@@ -277,9 +393,53 @@ const UserQuestionsPage = () => {
                 <Textarea
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
-                  className="min-h-[120px] resize-none"
+                  className="min-h-[100px] resize-none"
                   placeholder="Enter your question here..."
                 />
+              </div>
+
+              {/* Answer Options */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Answer Options
+                  </label>
+                  <Button
+                    type="button"
+                    onClick={addNewOption}
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Option
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {newOptions.map((option, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={option}
+                        onChange={(e) =>
+                          handleNewOptionChange(index, e.target.value)
+                        }
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1 text-black"
+                      />
+                      {newOptions.length > 2 && (
+                        <Button
+                          type="button"
+                          onClick={() => removeNewOption(index)}
+                          size="sm"
+                          variant="outline"
+                          className="h-10 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
