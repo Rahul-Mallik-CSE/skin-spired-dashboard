@@ -5,6 +5,12 @@
 import { Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -315,213 +321,213 @@ function TransactionTable() {
       </div>
 
       {/* Modal */}
-      {isModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="relative w-full max-w-md rounded-md bg-[#000000] px-6 py-6 shadow-lg">
-            {/* Close Button */}
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </button>
-
-            {/* User Image */}
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <img
-                  src={imagePreview || "/placeholder-avatar.png"}
-                  alt={selectedUser.name}
-                  className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
-                />
-                {isEditMode && (
-                  <label
-                    htmlFor="image-upload"
-                    className="absolute bottom-0 right-0 bg-[#45b1b4] hover:bg-[#5ce1e6b7] text-white rounded-full p-2 cursor-pointer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </label>
-                )}
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            {/* Heading */}
-            <h2 className="mb-6 text-center text-[30px] font-semibold text-[#E6E6E6]">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="bg-[#000000] border-gray-800 max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-center text-[30px] font-semibold text-[#E6E6E6]">
               User Details
-            </h2>
+            </DialogTitle>
+          </DialogHeader>
 
-            {/* User Details */}
-            <div className="space-y-2">
-              {isEditMode ? (
-                <>
-                  {/* Editable First Name and Last Name in one row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[#E6E6E6] text-sm">
-                        First Name
-                      </label>
-                      <Input
-                        value={editForm.firstName}
-                        onChange={(e) =>
-                          handleInputChange("firstName", e.target.value)
-                        }
-                        className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[#E6E6E6] text-sm">
-                        Last Name
-                      </label>
-                      <Input
-                        value={editForm.lastName}
-                        onChange={(e) =>
-                          handleInputChange("lastName", e.target.value)
-                        }
-                        className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Non-editable Join Date */}
-                  <DetailRow
-                    label="Join Date"
-                    value={selectedUser?.createdAt.slice(0, 10)}
-                  />
-
-                  {/* Non-editable Email */}
-                  <DetailRow label="Email" value={selectedUser?.email} />
-
-                  {/* Editable Age */}
-                  <div className="space-y-2">
-                    <label className="text-[#E6E6E6] text-sm">Age</label>
-                    <Input
-                      type="number"
-                      value={editForm.age}
-                      onChange={(e) => handleInputChange("age", e.target.value)}
-                      className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+          <div className="flex-1 overflow-y-auto pr-2">
+            {selectedUser && (
+              <>
+                {/* User Image */}
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <img
+                      src={imagePreview || "/placeholder-avatar.png"}
+                      alt={selectedUser.name}
+                      className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-md"
                     />
-                  </div>
-
-                  {/* Editable Gender */}
-                  <div className="space-y-2">
-                    <label className="text-[#E6E6E6] text-sm">Gender</label>
-                    <select
-                      value={editForm.gender}
-                      onChange={(e) =>
-                        handleInputChange("gender", e.target.value)
-                      }
-                      className="w-full bg-[#1a1a1a] text-[#E6E6E6] border border-[#D1D5DB] rounded-md px-3 py-2"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  {/* Editable Notification Switch */}
-                  <div className="flex justify-between border-b border-[#D1D5DB] py-2">
-                    <span className="text-[#E6E6E6]">Notification</span>
-                    <Switch
-                      checked={editForm.isNotification}
-                      onCheckedChange={(checked) =>
-                        handleInputChange("isNotification", checked)
-                      }
-                      className="data-[state=checked]:bg-[#45b1b4]"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <DetailRow
-                    label="User Name"
-                    value={`${selectedUser?.firstName || ""} ${
-                      selectedUser?.lastName || ""
-                    }`}
-                  />
-
-                  <DetailRow
-                    label="Join Date"
-                    value={selectedUser?.createdAt.slice(0, 10)}
-                  />
-                  <DetailRow label="Email" value={selectedUser?.email} />
-                  <DetailRow
-                    label="Age"
-                    value={selectedUser?.age?.toString() || "N/A"}
-                  />
-                  <DetailRow
-                    label="Gender"
-                    value={selectedUser?.gender || "N/A"}
-                  />
-                  <div className="flex justify-between border-b border-[#D1D5DB] py-2">
-                    <span className="text-[#E6E6E6]">Notification</span>
-                    <Switch
-                      checked={selectedUser?.isNotification || false}
-                      disabled
-                      className="data-[state=checked]:bg-[#45b1b4]"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Questions & Answers Section */}
-            {!isEditMode && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-[#E6E6E6] mb-4 border-b border-[#D1D5DB] pb-2">
-                  Questions & Answers
-                </h3>
-                <div className="space-y-4 max-h-60 overflow-y-auto">
-                  {isLoadingAnswers ? (
-                    <div className="text-center py-4 text-[#E6E6E6]">
-                      Loading answers...
-                    </div>
-                  ) : (
-                    userAnswers.map((item: any) => (
-                      <div
-                        key={item._id}
-                        className="bg-[#1a1a1a] p-3 rounded-lg border border-[#D1D5DB]"
+                    {isEditMode && (
+                      <label
+                        htmlFor="image-upload"
+                        className="absolute bottom-0 right-0 bg-[#45b1b4] hover:bg-[#5ce1e6b7] text-white rounded-full p-2 cursor-pointer"
                       >
-                        <p className="text-sm font-medium text-[#45b1b4] mb-2">
-                          Q: {item.questionId?.question || "N/A"}
-                        </p>
-                        <p className="text-sm text-[#E6E6E6] pl-4">
-                          A: {item.ans}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2 text-right">
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </p>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </label>
+                    )}
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+                {/* User Details */}
+                <div className="space-y-2">
+                  {isEditMode ? (
+                    <>
+                      {/* Editable First Name and Last Name in one row */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[#E6E6E6] text-sm">
+                            First Name
+                          </label>
+                          <Input
+                            value={editForm.firstName}
+                            onChange={(e) =>
+                              handleInputChange("firstName", e.target.value)
+                            }
+                            className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[#E6E6E6] text-sm">
+                            Last Name
+                          </label>
+                          <Input
+                            value={editForm.lastName}
+                            onChange={(e) =>
+                              handleInputChange("lastName", e.target.value)
+                            }
+                            className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                          />
+                        </div>
                       </div>
-                    ))
+
+                      {/* Non-editable Join Date */}
+                      <DetailRow
+                        label="Join Date"
+                        value={selectedUser?.createdAt.slice(0, 10)}
+                      />
+
+                      {/* Non-editable Email */}
+                      <DetailRow label="Email" value={selectedUser?.email} />
+
+                      {/* Editable Age */}
+                      <div className="space-y-2">
+                        <label className="text-[#E6E6E6] text-sm">Age</label>
+                        <Input
+                          type="number"
+                          value={editForm.age}
+                          onChange={(e) =>
+                            handleInputChange("age", e.target.value)
+                          }
+                          className="bg-[#1a1a1a] text-[#E6E6E6] border-[#D1D5DB]"
+                        />
+                      </div>
+
+                      {/* Editable Gender */}
+                      <div className="space-y-2">
+                        <label className="text-[#E6E6E6] text-sm">Gender</label>
+                        <select
+                          value={editForm.gender}
+                          onChange={(e) =>
+                            handleInputChange("gender", e.target.value)
+                          }
+                          className="w-full bg-[#1a1a1a] text-[#E6E6E6] border border-[#D1D5DB] rounded-md px-3 py-2"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+
+                      {/* Editable Notification Switch */}
+                      <div className="flex justify-between border-b border-[#D1D5DB] py-2">
+                        <span className="text-[#E6E6E6]">Notification</span>
+                        <Switch
+                          checked={editForm.isNotification}
+                          onCheckedChange={(checked) =>
+                            handleInputChange("isNotification", checked)
+                          }
+                          className="data-[state=checked]:bg-[#45b1b4]"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <DetailRow
+                        label="User Name"
+                        value={`${selectedUser?.firstName || ""} ${
+                          selectedUser?.lastName || ""
+                        }`}
+                      />
+
+                      <DetailRow
+                        label="Join Date"
+                        value={selectedUser?.createdAt.slice(0, 10)}
+                      />
+                      <DetailRow label="Email" value={selectedUser?.email} />
+                      <DetailRow
+                        label="Age"
+                        value={selectedUser?.age?.toString() || "N/A"}
+                      />
+                      <DetailRow
+                        label="Gender"
+                        value={selectedUser?.gender || "N/A"}
+                      />
+                      <div className="flex justify-between border-b border-[#D1D5DB] py-2">
+                        <span className="text-[#E6E6E6]">Notification</span>
+                        <Switch
+                          checked={selectedUser?.isNotification || false}
+                          disabled
+                          className="data-[state=checked]:bg-[#45b1b4]"
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
-              </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="mt-6 flex gap-2">
+                {/* Questions & Answers Section */}
+                {!isEditMode && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-[#E6E6E6] mb-4 border-b border-[#D1D5DB] pb-2">
+                      Questions & Answers
+                    </h3>
+                    <div className="space-y-4 max-h-60 overflow-y-auto">
+                      {isLoadingAnswers ? (
+                        <div className="text-center py-4 text-[#E6E6E6]">
+                          Loading answers...
+                        </div>
+                      ) : (
+                        userAnswers.map((item: any) => (
+                          <div
+                            key={item._id}
+                            className="bg-[#1a1a1a] p-3 rounded-lg border border-[#D1D5DB]"
+                          >
+                            <p className="text-sm font-medium text-[#45b1b4] mb-2">
+                              Q: {item.questionId?.question || "N/A"}
+                            </p>
+                            <p className="text-sm text-[#E6E6E6] pl-4">
+                              A: {item.ans}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2 text-right">
+                              {new Date(item.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex-shrink-0 pt-4">
+            <div className="flex gap-2">
               {isEditMode ? (
                 <>
                   <Button
                     onClick={handleCancelEdit}
                     variant="outline"
-                    className="flex-1 border-[#D1D5DB]  text-black hover:bg-gray-100"
+                    className="flex-1 border-[#D1D5DB] text-black hover:bg-gray-100"
                     disabled={isUpdating}
                   >
                     Cancel
@@ -553,8 +559,8 @@ function TransactionTable() {
               )}
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

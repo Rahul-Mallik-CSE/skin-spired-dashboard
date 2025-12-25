@@ -35,10 +35,17 @@ const nextConfig = {
   },
   // Proxy API requests to bypass Mixed Content errors
   async rewrites() {
+    const backendUrl = process.env.BACKEND_API_URL;
+
+    // Only add rewrite if BACKEND_API_URL is defined
+    if (!backendUrl) {
+      return [];
+    }
+
     return [
       {
         source: "/api/backend/:path*",
-        destination: `${process.env.BACKEND_API_URL}/:path*`,
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },
