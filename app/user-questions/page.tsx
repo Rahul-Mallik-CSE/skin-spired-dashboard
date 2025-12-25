@@ -340,7 +340,7 @@ const UserQuestionsPage = () => {
                       isVisible: checked,
                     }))
                   }
-                  className="data-[state=checked]:bg-[#45b1b4]"
+                  className="data-[state=checked]:bg-[#45b1b4] data-[state=unchecked]:bg-black"
                 />
               </div>
             </div>
