@@ -32,6 +32,7 @@ import { Info, X, Plus, Trash2, Upload, Eye } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { getFullImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 // Types
 interface Product {
@@ -535,10 +536,13 @@ function ProductTable() {
                       <div className="flex items-center gap-3">
                         {product.image && product.image[0] && (
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
-                            <img
+                            <Image
                               src={getFullImageUrl(product.image[0])}
-                              className="w-full h-full object-cover"
+
                               alt="Product"
+                              width={40}
+                              height={40}
+                              unoptimized
                             />
                           </div>
                         )}
@@ -635,9 +639,8 @@ function ProductTable() {
                     key={page}
                     variant={page === currentPage ? "default" : "outline"}
                     size="sm"
-                    className={`h-8 w-8 p-0 ${
-                      page === currentPage ? "bg-teal-800 text-white" : ""
-                    }`}
+                    className={`h-8 w-8 p-0 ${page === currentPage ? "bg-teal-800 text-white" : ""
+                      }`}
                     onClick={() => handlePageChange(page)}
                   >
                     {page}
@@ -697,8 +700,8 @@ function ProductTable() {
                 {!selectedProductId
                   ? "Upload New Product"
                   : isEditMode
-                  ? "Edit Product Details"
-                  : "Product Details"}
+                    ? "Edit Product Details"
+                    : "Product Details"}
               </h2>
               <div className="flex items-center gap-2">
                 {selectedProductId && !isEditMode ? (
@@ -730,8 +733,8 @@ function ProductTable() {
                       {isUpdating || isCreating
                         ? "Saving..."
                         : selectedProductId
-                        ? "Save"
-                        : "Create"}
+                          ? "Save"
+                          : "Create"}
                     </Button>
                   </>
                 )}
@@ -866,9 +869,8 @@ function ProductTable() {
                                   handleHowToUseChange(index, e.target.value)
                                 }
                                 className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder={`How to use this product 0${
-                                  index + 1
-                                }..`}
+                                placeholder={`How to use this product 0${index + 1
+                                  }..`}
                               />
                               <Button
                                 variant="outline"
@@ -1006,10 +1008,12 @@ function ProductTable() {
                               className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors bg-gray-50"
                             >
                               {imagePreviews[2] ? (
-                                <img
+                                <Image
                                   src={imagePreviews[2]}
                                   alt="Preview 3"
                                   className="w-full h-full rounded-lg object-cover"
+                                  width={400}
+                                  height={400}
                                 />
                               ) : (
                                 <>
