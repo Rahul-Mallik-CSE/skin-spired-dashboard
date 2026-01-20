@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -131,6 +133,7 @@ function TransactionTable() {
   return (
     <>
       <div className="overflow-hidden bg-[#FFFFFF] rounded-md pb-3">
+        {/* title */}
         <h2 className="text-[32px] font-medium text-[#101010] p-6">
           Recent User
         </h2>
@@ -216,7 +219,7 @@ function TransactionTable() {
                 >
                   {page}
                 </Button>
-              )
+              ),
             )}
           </div>
 
