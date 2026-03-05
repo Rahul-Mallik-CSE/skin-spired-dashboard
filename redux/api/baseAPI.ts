@@ -19,6 +19,7 @@ export const baseApi = createApi({
     "Auth",
     "SkinCondition",
     "Product",
+    "Link",
   ],
   endpoints: () => ({}),
 });

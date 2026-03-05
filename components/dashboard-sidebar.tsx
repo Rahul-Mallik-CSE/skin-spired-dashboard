@@ -117,6 +117,16 @@ export default function DashboardSidebar() {
               />
 
               <NavItem
+                href="/upload-links"
+                icon={StrikethroughIcon}
+                label="Upload Links"
+                active={
+                  pathname === "/upload-links" ||
+                  pathname.startsWith("/upload-links")
+                }
+              />
+
+              <NavItem
                 href="/setting"
                 icon={Settings}
                 label="Setting"
@@ -195,7 +205,7 @@ function NavItem({ href, icon: Icon, label, active }: NavItemProps) {
             "flex items-center gap-3 px-4 !py-5 transition-colors rounded-full",
             active
               ? "bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 text-white"
-              : "hover:bg-gradient-to-br hover:from-blue-600 hover:via-blue-500 hover:to-teal-400 hover:text-white"
+              : "hover:bg-gradient-to-br hover:from-blue-600 hover:via-blue-500 hover:to-teal-400 hover:text-white",
           )}
         >
           <Icon size={18} />
