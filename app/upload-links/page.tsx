@@ -232,7 +232,11 @@ function LinksTable() {
             Manage your website links
           </p>
         </div>
-        <Button onClick={openCreateModal} className="flex items-center gap-2">
+        <Button
+          onClick={openCreateModal}
+          className="flex items-center gap-2"
+          disabled={allLinks.length >= 1}
+        >
           <Plus className="h-4 w-4" />
           Add Links
         </Button>
